@@ -23,6 +23,12 @@ def on_mouse(event,x,y,flag,param):
     S = p_sel[1]
     V = p_sel[2]
 
+def draw_points(img,x, y, r, color):
+    cv2.circle(img, (x,y), r, color,3)
+    return img
+
+def clean_screen():
+    print "Clean screen"
 
 cv2.namedWindow("camera", 1)
 cv2.namedWindow("camera2", 2)
@@ -42,12 +48,20 @@ while True:
     max_color = np.array([H+thr_H,S+thr_S,V+thr_V])
     mask = cv2.inRange(hsv, min_color, max_color)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel5)
+    output = np.zeros(mask.shape, np.uint8)
+    rect = cv2.boundingRect(mask)
+    cursor_x = rect[0]
+    cursor_y = rect[1]
     
-    #res = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-    cv2.putText(mask,"H:" + str(H)+" S:"+str(S)+" V:"+str(V), (10,30), cv2.FONT_HERSHEY_PLAIN, 2.0, (255,255,255), thickness = 1)
-    cv2.imshow("camera", mask)
+    cv2.putText(output,"H:" + str(H)+" S:"+str(S)+" V:"+str(V), (10,30), cv2.FONT_HERSHEY_PLAIN, 2.0, (255,255,255), thickness = 1)
+    cv2.putText(output,"X:" + str(cursor_x)+" Y:"+str(cursor_y), (10,50), cv2.FONT_HERSHEY_PLAIN, 2.0, (255,255,255), thickness = 1)
+    output = draw_points(output, cursor_x,cursor_y,3,(255,255,255))
+    cv2.imshow("camera", output)
     cv2.imshow("camera2", src)
     src_segmented = cv2.add(src,src,mask=mask)
-    #cv2.imshow("camera3", src_segmented)
-    if cv2.waitKey(10) == 27:
+    cv2.imshow("camera3", src_segmented)
+    ch = 0xFF & cv2.waitKey(50)
+    if ch in [ord('r'), ord('R')]:
+        clean_screen()
+    if ch == 27:
         break
